@@ -18,6 +18,7 @@ public class JavaFXCalculator extends Application {
    private TextField tfDisplay;    // display textfield
    // For computation
    private double result = 0.0;      // Result of computation
+   private double memoryValue = 0.0;
    private String inStr = "0";  // Input number as String
    // Previous operator: ' '(nothing), '+', '-', '*', '/', '='
    private char lastOperator = ' ';
@@ -55,21 +56,34 @@ public class JavaFXCalculator extends Application {
             compute();
             lastOperator = '*';
             break;
-         case "/":
+         case "\u00F7":
             compute();
-            lastOperator = '/';
+            lastOperator = '\u00F7';
             break;
          case "=":
             compute();
             lastOperator = '=';
             break;
+         case "\u2198":
+        	 if (inStr.length() == 1) {
+        		 inStr.equals("0");
+        	 }else {
+        		 inStr = inStr.substring(0, inStr.length() - 1);
+        	 }
+        	 tfDisplay.setText(inStr);
+        	 break;
          case "^":
         	 compute();
         	 lastOperator = '^';
         	 break;
-         case "":
-        	 compute();
-        	 lastOperator = '^';
+         case "\u221A":
+        	 if (lastOperator != '=') {
+        		 result = Double.parseDouble(inStr);
+        	 }
+        	 result = Math.sqrt(result);
+        	 inStr = Double.toString(result);
+        	 tfDisplay.setText(inStr);
+        	 lastOperator = '\u221A';
         	 break;
          // Clear button
          case "C":
@@ -78,6 +92,33 @@ public class JavaFXCalculator extends Application {
             lastOperator = ' ';
             tfDisplay.setText("0");
             break;
+         case "M+":
+        	 if (lastOperator != '=') {
+        		 memoryValue += Double.parseDouble(inStr);
+        	 } else {
+        		 memoryValue += result;
+        	 }
+        	 memoryDisplay.setText("Memory = " + memoryValue);
+        	 lastOperator = ' ';
+        	 break;
+         case "M-":
+        	 if (lastOperator != '=') {
+        		 memoryValue -= Double.parseDouble(inStr);
+        	 } else {
+        		 memoryValue -= result;
+        	 }
+        	 memoryDisplay.setText("Memory = " + memoryValue);
+        	 lastOperator = ' ';
+        	 break;
+         case "MR":
+        	 inStr = String.valueOf(memoryValue);
+        	 lastOperator = ' ';
+        	 break;
+         case "MC":
+        	 memoryValue = 0.0;
+        	 memoryDisplay.setText("Memory is " + memoryValue);
+        	 lastOperator = ' ';
+        	 break;
       }
    };
 
@@ -95,8 +136,12 @@ public class JavaFXCalculator extends Application {
          result -= inNum;
       } else if (lastOperator == '*') {
          result *= inNum;
-      } else if (lastOperator == '/') {
+      } else if (lastOperator == '\u00F7') {
          result /= inNum;
+      } else if (lastOperator == '^') {
+          result = Math.pow(result, inNum);
+      } else if (lastOperator == '\u221A') {
+          result = Math.sqrt(inNum);
       } else if (lastOperator == '=') {
          // Keep the result for the next operation
       }
@@ -142,6 +187,15 @@ public class JavaFXCalculator extends Application {
          btns[i].setOnAction(handler);  // Register event handler
          btns[i].setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);  // full-width
          paneButton.add(btns[i], i % numCols, i / numCols);  // control, col, row
+         
+         switch(btnLabels[i]) {
+         case "M+": case "M-": case "MR": case "MC":
+         	btns[i].setStyle("-fx-color: blue");
+         }
+         switch(btnLabels[i]) {
+         case "+": case "-": case "x": case "\u221A": case "=": case "^": case "\u00F7": case "C": case "\u2190": case "1": case "2": case "3":case "4": case "5": case "6":case "7": case "8": case "9": case "0": case ".":
+         	btns[i].setStyle("-fx-color: red");
+         }
       }
 
       // Setup up the scene graph rooted at a BorderPane (of 5 zones)
@@ -149,10 +203,11 @@ public class JavaFXCalculator extends Application {
       root.setPadding(new Insets(15, 15, 15, 15));  // top, right, bottom, left
       root.setTop(tfDisplay);     // Top zone contains the TextField
       root.setCenter(paneButton); // Center zone contains the GridPane of Buttons
+      memoryDisplay = new Text("Memory = 0");
       root.setBottom(memoryDisplay);
 
       // Set up scene and stage
-      primaryStage.setScene(new Scene(root, 300, 275));
+      primaryStage.setScene(new Scene(root, 350, 325));
       primaryStage.setTitle("JavaFX Calculator");
       primaryStage.show();
    }
